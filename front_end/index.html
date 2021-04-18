@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Secret Santa</title>
+      <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"> </script >
+      <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+      <!--Import Google Icon Font-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  </head>
+  <body style="background-color: #E57373;background-image: url(images/santa.png); width: 100%; height: 150px; background-repeat: no-repeat">
+  <div class="container">
+      <h1 class="title">Secret Santa</h1>
+  </div>
+  <div id="app">
+       <br><br><br><br><br><br><br><br>
+      <section id="cover" class="min-vh-100" v-if="succes">
+          <div id="cover-caption">
+              <div class="container">
+                  <div class="row text-white">
+                      <div class="col-xl-5 col-lg-6 col-md-8 col-sm-10 mx-auto text-center form p-4">
+                          <h1 class="display-4 py-2 text-truncate">let's start ! </h1>
+                          <div class="px-2">
+                              <form action="" class="justify-content-center">
+                                  <div class="form-group">
+                                      <label class="sr-only">Name</label>
+                                      <input type="text" class="form-control" placeholder="Donner un titre a votre tirage" v-model="va1">
+                                  </div>
+                                  <button type="submit" class="btn btn-primary btn-lg" v-on:click="cree_tirage">Lancer</button>
+                              </form>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </section>
+      <section class="min-vh-100" v-if="sec2">
+          <div class="container">
+              <form class="form-inline">
+                  <input type="text" class="form-control" placeholder="Nom" v-model="nom_participant">
+                  <input type="text" class="form-control" placeholder="Prenom" v-model="prenom_participant">
+                  <div class="form-check">
+                      <input type="checkbox" class="form-check-input" id="exampleCheck1" v-model="dep">
+                      <label class="form-check-label" for="exampleCheck1">Liste noire</label>
+                  </div>
+              </form>
+              <div>
+                  <button type="submit" class="btn btn-primary btn-lg" @click="ajouter_participant">Ajouter un Participant</button>
+                  <button type="submit" class="btn btn-primary btn-lg" @click="genere_tirage">Générer La liste du tirage</button>
+              </div>
+          </div>
+      </section>
+      <section v-if="sec3">
+          <div class="container">
+              <h1>There is your draw</h1>
+              <table class="table table-dark">
+                  <thead>
+                  <tr>
+                      <th>Secret Santa</th>
+                      <th>Recipient</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr v-for="s in tirage[0]">
+                      <td>{{ s.donner }}</td>
+                      <td>{{ s.recu }}</td>
+                  </tr>
+                  </tbody>
+              </table>
+              <div>
+                  <button type="submit" class="btn btn-primary btn-lg" @click="historique" v-if="!sec4">Afficher les 5 dernier tirages</button>
+                  <button type="submit" class="btn btn-primary btn-lg" @click="masquer_historique" v-if="sec4">Masquer les 5 dernier tirages</button>
+                  <button type="submit" class="btn btn-primary btn-lg" @click="renesialiser"s>Rajouter un tirage</button>
+              </div>
+              <div v-if="sec4">
+                  <h1>There is your last draws</h1>
+                  <table class="table table-dark"v-for="i in historiques">
+                      <thead >
+                      <tr>
+                          <th>Secret Santa</th>
+                          <th>Recipient</th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      <tr v-for="s in i[0]">
+                          <td>{{ s.donner }}</td>
+                          <td>{{ s.recu }}</td>
+                      </tr>
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+      </section>
+  </div>
+  <script>
+    var app = new Vue({
+        el: "#app",
+        data: {
+            dep: false,
+            succes: true,
+            sec2: false,
+            sec3: false,
+            sec4: false,
+            va1: "",
+            va2: "",
+            t_id: 0,
+            historiques: [],
+            liste_tirage: [],
+            nom_participant: "",
+            prenom_participant: "",
+            tirage: [],
+            liste_p: []
+        },
+        methods:{
+            cree_tirage: function (){
+                if(this.va1.length > 0){
+                    axios.post('http://localhost:5000/tirage/'+this.va1).then(reponse => console.log(reponse));
+                    this.succes=false;
+                    this.sec2=true;
+                }else{
+                    alert("Veuillez saisir un titre");
+                }
+
+            },
+            ajouter_participant: function (){
+                if(this.nom_participant.length == 0 || this.prenom_participant.length == 0){
+                    alert("Veuillez remplir tous les champs");
+                }else{
+                     va3=this.va1;
+                if(this.dep){
+                    axios.get('http://localhost:5000/historiques2').then(reponse => this.liste_tirage=reponse.data);
+
+                    this.t_id = this.liste_tirage.filter(function (item) {
+                        return item.name ===  va3
+                    }).map(x => x.id)[0];
+                    axios.post('http://localhost:5000/liste_noire/'+this.nom_participant+'/'+this.prenom_participant,{
+                        "prenom": this.prenom_participant,
+                        "tirage_id": this.t_id
+                    }).then(reponse => console.log(reponse));
+                }else{
+                    axios.get('http://localhost:5000/historiques2').then(reponse => this.liste_tirage=reponse.data);
+                    this.t_id = this.liste_tirage.filter(function (item) {
+                        return item.name === va3
+                    }).map(x => x.id)[0];
+                    axios.post('http://localhost:5000/participant/'+this.nom_participant+'/'+this.prenom_participant,{
+                        "prenom": this.prenom_participant,
+                        "tirage_id": this.t_id
+                    }).then(reponse => console.log(reponse));
+                    this.liste_p.push(this.nom_participant);
+
+                }
+
+                }
+                this.nom_participant="";
+                this.prenom_participant="";
+
+                },
+            genere_tirage: function (){
+                if(this.liste_p.length < 3){
+                    alert("Vous devez avoir au minimum 3 personne dans la liste");
+                }else{
+                    this.sec2=false;
+                    this.sec3= true;
+                    axios.get('http://127.0.0.1:5000/tirages/'+this.t_id).then(reponse => this.tirage=reponse.data);
+
+                }
+
+
+            },
+            historique: function (){
+                axios.get('http://127.0.0.1:5000/historiques').then(reponse => this.historiques=reponse.data);
+                this.sec4= true;
+            },
+            masquer_historique: function (){
+                this.sec4 = false;
+            },
+            renesialiser:function (){
+                this.va1="";
+                this.succes=true;
+                this.sec2=false;
+                this.sec3=false;
+                this.sec4=false;
+            }
+
+        }
+    });
+  </script>
+  </body>
+</html>
