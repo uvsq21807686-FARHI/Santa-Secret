@@ -6,4 +6,5 @@
 * accedez dans le projet 
 * tapez la commande  `pip install -r requirements.tx
 * tapez 
+* 
 `python app.py` pour lancer le serveur `
